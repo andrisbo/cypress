@@ -3,125 +3,50 @@ describe('Intranet login tests', () => {
         cy.visit('/')
 
     })
-
-    it('Check product counter for Food category', () => {
+    
+//Tried to find common solution for  all cases no pagination/multiple pagination
+//Limitation - can be executed only for two pages   
+//Faced issues:  
+//1. how to check that pagination is displayed, property expected
+//2. actualCount value returned by function checkTwoPages() is 0, most probably not better solution for typescript
+    
+    it('Check product counter for \'Other\', \'Electronics\' category', () => {
         cy.login(Cypress.env('username'), Cypress.env('password'))
 
-        const products: string[] = ['Electronics', 'Other', 'Food']
-
-        cy.get(products).each(($el) => {
-
-            cy.visit('https://intranet.ctco.lv/billboard/')
-            cy.contains($el).find('.count').then(($productTest) => {
-                cy.contains($el).click()
-                const expectedCount = $productTest.text().substring(0, $productTest.text().indexOf(' '))
-                cy.log('Display count ' + expectedCount)
-                //how to get values length?
-                let actualCount = 0;
-                cy.get('.product-details').its('length').then((pageFirst) =>{
-                    actualCount += pageFirst
-                })
-                cy.log('actualCount ' + actualCount)
-
+        const productList: string[] = ['Other', 'Electronics']
+        
+        cy.get(productList).each(($product) => {
+            let actualCount = 0
+            cy.visit('') //billboard
+            cy.contains($product).find('.count').then(($productTotal) => {
                 
-                const findPage = () => {
-                    cy.get('.wrap-content').find('.next').then(($wrap) => {
-                        cy.log('$wrap text>' + $wrap.text() + '<')
-                        cy.log('$wrap text length>' + $wrap.text().length + '<')
-
-                        //fails if 'woocommerce-pagination' not exists how to check if it doesn't exist
-                        cy.get('.woocommerce-pagination').then(($paging) => {
-                            cy.log('nextPage text>' + $paging.text() + '<')
-
-                            if ($paging.text().includes('→')) {
-                                cy.get('.woocommerce-pagination').find('.next').click();
-                                 cy.get('.product-details').its('length').then((pageNext) => {
-                                     actualCount += pageNext
-                                    cy.log('countFirst + ' + actualCount)
-                                })
-
-                                findPage()
-                            }
-                        })
-                        return
-                    }) //cy.get('.wrap-content').find('.next').then(($wrap)
-                    expect(expectedCount == 3, $el +' count on main page differs from ' + $el + ' sum on all pages')
+                let expectedCount = Number($productTotal.text().substring(0, $productTotal.text().indexOf(' ')))
+                cy.contains($product).click()
+                
+                cy.get('.product-details').its('length').then((firtPageCount) => {
+                    actualCount += firtPageCount
+                })
+                
+                function checkTwoPages() {
+                    //fails if 'woocommerce-pagination' doest exist - no pagination
+                    cy.get('.woocommerce-pagination').then(($paging) => {
+                        if ($paging.text().includes('→')) {
+                            cy.get('.woocommerce-pagination').find('.next').click();
+                            cy.get('.product-details').its('length').then((pageNext) => {
+                                actualCount += pageNext
+                                //assertion inside the function since fased issue to return value, returned as 0
+                                 expect(expectedCount).to.equal(actualCount, 'Total ' +$product+ ' differs from pagination count')
+                            })
+                            checkTwoPages() //not needed since not checked if pagination displayed
+                        }
+                    })
+                    return
                 }
-                expect(expectedCount == 3, $el +' count on main page differs from ' + $el + ' sum on all pages')
-                findPage()
+                checkTwoPages()
             })
-           
-        })// cy.get(datal).each(($el, index) =>
+        })
     })
-
-    // it('Check product counter for Food category', () => {
-    //     cy.login(Cypress.env('username'), Cypress.env('password'))
-    //    
-    //     const datal = ['Electronics','Food']
-    //
-    //     cy.get(datal).each(($el) => {
-    //        
-    //
-    //     cy.visit('https://intranet.ctco.lv/billboard/')
-    //     cy.contains($el).find('.count').then(($productTest) => {
-    //         cy.contains($el).click()
-    //         const expectedCount = $productTest.text().substring(0, $productTest.text().indexOf(' '))
-    //         cy.log('Display count ' + expectedCount)
-    //         //how to get values length?
-    //         let countFirst: string = (cy.get('.product-details').its('length'))
-    //         cy.log('countFirst ' + countFirst)
-    //        
-    //         const findPage = () => {
-    //             cy.get('.woocommerce-pagination').then(($paging) => {
-    //                 cy.log('nextPage text>' + $paging.text() +'<')
-    //                
-    //             if ($paging.text().includes('→')){
-    //                 cy.get('.woocommerce-pagination').find('.next').click();
-    //                 let countNext  = (cy.get('.product-details').its('length'))
-    //               
-    //                 cy.log('countNext + ' + countNext)
-    //                
-    //                 findPage()
-    //             }
-    //         })
-    //          return
-    //         }
-    //         findPage()
-    //     })
-    //
-    // })// cy.get(datal).each(($el, index) =>
-    // })
-    //
-    // it('Check product counter for Food category', () => {
-    //     cy.login(Cypress.env('username'), Cypress.env('password'))
-    //
-    //     cy.visit('https://intranet.ctco.lv/billboard/')
-    //     cy.contains('Electronics').find('.count').then(($productTest) => {
-    //         cy.contains('Electronics').click()
-    //         const expectedCount = $productTest.text().substring(0, $productTest.text().indexOf(' '))
-    //         cy.log('Display count ' + expectedCount)
-    //         //cy.get('.product-details').should('have.length', Number(count))
-    //         let countFirst: string = (cy.get('.product-details').its('length'))
-    //         cy.log('countFirst ' + countFirst)
-    //        
-    //       //  const findPage = () => {
-    //             cy.get('.woocommerce-pagination').find('.next').then(($nextPage) => {
-    //                 cy.log('nextPage text' + $nextPage.text())
-    //                 if ($nextPage.text().length > 0) {
-    //                     cy.get('.woocommerce-pagination').find('.next').click();
-    //                     let countNext: number = Number(cy.get('.product-details').its('length'))
-    //                     countFirst = countFirst + countNext
-    //                     cy.log('countNext + ' + countNext)
-    //
-    //               //      findPage()
-    //                 }
-    //             })
-    //           //  return
-    //         //}
-    //        
-    //     })
-    // })
-
+    
 })
 
 

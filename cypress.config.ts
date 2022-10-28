@@ -2,10 +2,10 @@ import { defineConfig } from "cypress";
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'https://intranet.ctco.lv',
+    baseUrl: '',
     },
   env:{
-    username: 'andris.boriss',
+    username: '',
     password: ''
   }
   },
